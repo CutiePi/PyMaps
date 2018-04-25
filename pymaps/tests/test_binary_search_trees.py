@@ -3,7 +3,7 @@ import unittest
 from pymaps.trees.BinarySearchTree import BinarySearchTree
 
 
-class BinaryTreeTest(unittest.TestCase):
+class TestBinarySearchTrees(unittest.TestCase):
 
     def test_create_tree(self):
         bt = BinarySearchTree()
