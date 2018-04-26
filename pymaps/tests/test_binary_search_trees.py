@@ -1,9 +1,18 @@
+import random
 import unittest
 
 from pymaps.trees.BinarySearchTree import BinarySearchTree
 
 
 class TestBinarySearchTrees(unittest.TestCase):
+
+    def inorder_str(self, bt: BinarySearchTree):
+        keys = []
+
+        for key, value in bt:
+            keys.append(str(key))
+
+        return "".join(keys)
 
     def test_create_tree(self):
         bt = BinarySearchTree()
@@ -50,3 +59,97 @@ class TestBinarySearchTrees(unittest.TestCase):
 
         walk = bt._inorder_predecessor(walk)
         self.assertEqual(walk.get_key(), -1)
+
+        self.assertEqual(self.inorder_str(bt), "-11234")
+
+        self.assertEqual(len(bt), 5)
+
+    def test_delete_small(self):
+        bt = BinarySearchTree()
+
+        bt[5] = 5
+        del bt[5]
+
+        self.assertEqual(len(bt), 0)
+
+        bt[5] = 5
+        bt[6] = 6
+
+        self.assertEqual(bt._max_node.get_key(), 6)
+        self.assertEqual(bt._min_node.get_key(), 5)
+        self.assertEqual(len(bt), 2)
+
+        self.assertEqual(bt._root.get_key(), 5)
+
+        del bt[5]
+
+        self.assertEqual(bt._root.get_key(), 6)
+        self.assertEqual(bt._max_node.get_key(), 6)
+        self.assertEqual(bt._min_node.get_key(), 6)
+
+        self.assertEqual(len(bt), 1)
+
+    def test_two_child_delete(self):
+        bt = BinarySearchTree()
+        bt[5] = 5
+        bt[4] = 4
+        bt[6] = 6
+        del bt[5]
+
+        self.assertEqual(len(bt), 2)
+        self.assertTrue(4 in bt)
+        self.assertTrue(6 in bt)
+        self.assertFalse(5 in bt)
+
+        bt[2] = 2
+        bt[3] = 3
+        bt[1] = 1
+
+        del bt[2]
+
+        self.assertEqual(self.inorder_str(bt), "1346")
+        self.assertEqual(bt._min_node.get_key(), 1)
+        self.assertEqual(bt._max_node.get_key(), 6)
+
+        pass
+
+    def assert_match(self, bt, control):
+        for k in control:
+            self.assertEqual(control[k], bt[k], "Control has a key that BST doesn't")
+
+        for k, v in bt:
+            self.assertEqual(v, control[k], "BST as a key that control doesn't")
+
+        self.assertEqual(len(bt), len(control))
+
+    def test_random_insertions(self):
+        bt = BinarySearchTree()
+        control = dict()
+
+        for i in range(1000):
+            key = random.randint(0, 10000)
+            value = random.randint(0, 8000)
+
+            bt[key] = value
+            control[key] = value
+
+        self.assert_match(bt, control)
+
+    def test_random_inserts_and_delete(self):
+        bt = BinarySearchTree()
+        control = dict()
+
+        for i in range(10000):
+            key = random.randint(0, 10000)
+            value = random.randint(0, 8000)
+
+            action = random.randint(0, 100)
+
+            if action > 70 and key in control:
+                del bt[key]
+                del control[key]
+            else:
+                bt[key] = value
+                control[key] = value
+
+        self.assert_match(bt, control)

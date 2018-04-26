@@ -31,11 +31,21 @@ class TreeNode:
         self._value = new_value
         return old_value
 
+    def set_key(self, key):
+        old_key = self._key
+        self._key = key
+        return old_key
+
     def get_parent(self):
         return self._parent_node
 
+    def set_parent(self, new_parent):
+        old_parent = self._parent_node
+        self._parent_node = new_parent
+        return old_parent
+
     def __repr__(self):
-        return f"[{self._key}:{self._value}]"
+        return "[%s:%s]" % (self._key, self._value)
 
 
 LEFT = True
@@ -69,6 +79,21 @@ class BinarySearchTree:
             walk = walk.get_child(key < walk.get_key())
 
         return walk if walk is not None else last
+
+    def __getitem__(self, key):
+        return self._get(key)
+
+    def _get(self, key):
+        node = self._search(key)
+
+        if node is not None and node.get_key() == key:
+            return node.get_value()
+        else:
+            return None
+
+    def __contains__(self, key):
+        node = self._search(key)
+        return node is not None and node.get_key() == key
 
     def __setitem__(self, key, value):
         self._insert(key, value)
@@ -109,17 +134,91 @@ class BinarySearchTree:
                 self._max_node = node
             self._inserted_hook(node)
 
-    def _remove(self, key, value):
-        pass  # TODO
+    def __delitem__(self, key):
+        self._remove(key)
 
-    def _inorder_traversal(self, node=None):
+    def _remove(self, key):
+        node = self._search(key)
+
+        if node is None or node.get_key() != key:
+            return
+
+        one_child = node.has_child(LEFT) != node.has_child(RIGHT)
+        no_child = node.has_child(LEFT) == node.has_child(RIGHT) == False
+
+        if one_child or no_child:
+            self._single_child_delete(node)
+        else:
+            # we find the predecessor and actually delete that node
+            predecessor = self._inorder_predecessor(node)
+
+            if predecessor == self._min_node:
+                self._min_node = node
+            if predecessor == self._max_node:
+                self._max_node = node
+
+            p_key = predecessor.get_value()
+            p_value = predecessor.get_value()
+
+            self._single_child_delete(predecessor)
+
+            node.set_key(p_key)
+            node.set_value(p_value)
+
+    def _single_child_delete(self, node):
+
+        ancestor = node.get_parent()
+        side = LEFT if (ancestor is None or ancestor.get_child(LEFT) == node) else RIGHT
+        child = node.get_child(LEFT) if node.has_child(LEFT) else node.get_child(RIGHT)
+
+        if node is self._min_node:
+            self._min_node = child
+
+        if node is self._max_node:
+            self._max_node = child
+
+        if ancestor is None:
+            self._root = child
+            if child is not None:
+                child.set_parent(None)
+        elif child is not None:
+            self._attach(ancestor, child, side)
+        else:
+            ancestor.set_child(None, side)
+
+        node.set_parent(None)
+        self._item_count -= 1
+
+    def __iter__(self):
+        for node in self._inorder_traversal(self._root):
+            yield node.get_key(), node.get_value()
+
+    def _inorder_traversal(self, node):
 
         if node is None:
-            node = self._root
+            return
 
         yield from self._inorder_traversal(node.get_child(LEFT))
         yield node
         yield from self._inorder_traversal(node.get_child(RIGHT))
+
+    def _preorder_traversal(self, node):
+
+        if node is None:
+            return
+
+        yield node
+        yield from self._preorder_traversal(node.get_child(LEFT))
+        yield from self._preorder_traversal(node.get_child(RIGHT))
+
+    def _postorder_traversal(self, node):
+
+        if node is None:
+            return
+
+        yield from self._postorder_traversal(node.get_child(LEFT))
+        yield from self._postorder_traversal(node.get_child(RIGHT))
+        yield node
 
     # noinspection PyMethodMayBeStatic
     def _inorder_predecessor(self, node):
@@ -129,7 +228,6 @@ class BinarySearchTree:
         :param node: the node from where we start
         :return: the predecessor
         """
-        # TODO write test, and check algorithm
         if node.has_child(left=True):
             walk = node.get_child()
             while walk.has_child(RIGHT):
@@ -142,7 +240,17 @@ class BinarySearchTree:
             return walk
 
     def _inorder_successor(self, node):
-        pass
+
+        if node.has_child(RIGHT):
+            walk = node.get_child(RIGHT)
+            while walk.has_child(LEFT):
+                walk = walk.get_child(LEFT)
+            return walk
+        else:
+            walk = node.get_parent()
+            while walk is not None and walk.get_key() < node.get_key():
+                walk = walk.get_parent()
+            return walk
 
     def __len__(self):
         return self._item_count
@@ -178,3 +286,14 @@ class BinarySearchTree:
             raise ValueError("Empty Binary Search tree")
         else:
             return self._min_node.get_key(), self._min_node.get_value()
+
+    def _attach(self, parent, new_child, side=LEFT):
+        """
+        Attach and node to a parent node, and perform the two way bindings
+        :param parent: the parent node
+        :param new_child: the child node
+        :param side: the side where the child will be
+        :return: void
+        """
+        parent.set_child(new_child, side)
+        new_child.set_parent(parent)
