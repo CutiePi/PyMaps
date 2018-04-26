@@ -157,7 +157,7 @@ class BinarySearchTree:
             if predecessor == self._max_node:
                 self._max_node = node
 
-            p_key = predecessor.get_value()
+            p_key = predecessor.get_key()
             p_value = predecessor.get_value()
 
             self._single_child_delete(predecessor)
