@@ -6,6 +6,6 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - pytest --cov=pymapscov --cov-report=html
+  - pytest --cov=PyMaps --cov-report=html
 after_success:
   - coveralls
