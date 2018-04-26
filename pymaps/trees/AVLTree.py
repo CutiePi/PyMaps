@@ -57,7 +57,11 @@ class AVLTree(BinarySearchTree):
 
             if not walk.is_balanced():
                 tall_child = walk.heavy_child()
-                tall_grandchild = tall_child.heavy_child()
+
+                if tall_child.get_left_height() == tall_child.get_right_height():
+                    tall_grandchild = tall_child.get_child(walk.get_child() == tall_child)
+                else:
+                    tall_grandchild = tall_child.heavy_child()
 
                 root = self._trinode_restructure(tall_grandchild)
 

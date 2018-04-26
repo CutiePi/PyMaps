@@ -136,7 +136,7 @@ class TestBinarySearchTrees(unittest.TestCase):
         bt = BinarySearchTree()
         control = dict()
 
-        for i in range(1000):
+        for i in range(10000):
             key = random.randint(0, 10000)
             value = random.randint(0, 8000)
 
@@ -198,3 +198,15 @@ class TestBinarySearchTrees(unittest.TestCase):
 
         self.assertEqual(two_node.get_parent().get_key(), 5)
         self.assertEqual(one_node.get_parent().get_key(), 2)
+
+    def test_index(self):
+        bt = BinarySearchTree()
+
+        for i in range(50):
+            bt[i] = i
+
+        for i in range(50):
+            self.assertEqual(i, bt.at_index(i)[0])
+
+        for i in range(50):
+            self.assertEqual(bt.index_of(i), i)

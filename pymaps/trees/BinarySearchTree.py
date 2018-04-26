@@ -1,5 +1,5 @@
 class TreeNode:
-    __slots__ = ["_key", "_value", "_parent_node", "_left_child", "_right_child"]
+    __slots__ = ["_key", "_value", "_parent_node", "_left_child", "_right_child", "_subtree_size"]
 
     def __init__(self, key, value, parent_node):
         self._key = key
@@ -7,6 +7,16 @@ class TreeNode:
         self._parent_node = parent_node
         self._left_child = None
         self._right_child = None
+        self._subtree_size = 1
+
+    def increment_subtree_size(self):
+        self._subtree_size += 1
+
+    def get_subtree_size(self):
+        return self._subtree_size
+
+    def decrement_subtree_size(self):
+        self._subtree_size -= 1
 
     def has_child(self, left=True):
         return (self._left_child is not None) if left else (self._right_child is not None)
@@ -208,11 +218,34 @@ class BinarySearchTree:
 
         if node is not None:
             self._item_count += 1
+
+            if insertion_spot is not None:
+                self._increment_subtree_size(insertion_spot.get_child(insertion_spot.get_key() > key))
+
             if self._min_node is None or key < self._min_node.get_key():
                 self._min_node = node
             if self._max_node is None or key > self._max_node.get_key():
                 self._max_node = node
             self._inserted_hook(node)
+
+    def _increment_subtree_size(self, node):
+
+        if node is None:
+            return
+
+        parent = node.get_parent()
+
+        while parent is not None:
+            parent.increment_subtree_size()
+            parent = parent.get_parent()
+
+    def _decrement_subtree_size(self, node):
+
+        parent = node.get_parent()
+
+        while parent is not None:
+            parent.decrement_subtree_size()
+            parent = parent.get_parent()
 
     def __delitem__(self, key):
         self._remove(key)
@@ -250,6 +283,8 @@ class BinarySearchTree:
         ancestor = node.get_parent()
         side = LEFT if (ancestor is None or ancestor.get_child(LEFT) == node) else RIGHT
         child = node.get_child(LEFT) if node.has_child(LEFT) else node.get_child(RIGHT)
+
+        self._decrement_subtree_size(node)
 
         if node is self._min_node:
             self._min_node = child
@@ -378,3 +413,65 @@ class BinarySearchTree:
         parent.set_child(new_child, side)
         if new_child is not None:
             new_child.set_parent(parent)
+
+    def index_of(self, key):
+        node = self._search(key)
+
+        if node.get_key() != key:
+            return None  # TODO raise?
+
+        ancestor = node.get_parent()
+
+        smaller_than_count = 0
+
+        if node.has_child(RIGHT):
+            smaller_than_count += node.get_child(RIGHT).get_subtree_size()
+
+        walk = node
+
+        while ancestor is not None:
+            if walk == ancestor.get_child(LEFT):
+                smaller_than_count += 1
+                if ancestor.get_child(RIGHT) is not None:
+                    smaller_than_count += ancestor.get_child(RIGHT).get_subtree_size()
+                walk = ancestor
+            ancestor = ancestor.get_parent()
+
+        return self._item_count - (smaller_than_count + 1)
+
+    def at_index(self, i):
+
+        if not -self._item_count <= i < self._item_count:
+            raise ValueError("Illegal index")
+
+        if i < 0:
+            i = self._item_count + i
+
+        walk = self._root
+
+        if walk is None:
+            return None
+
+        total = walk.get_subtree_size()
+        smaller_than_count = total - i - 1
+
+        last = walk
+        while walk is not None:
+            last = walk
+            if walk.has_child(RIGHT):
+                right_size = walk.get_child(RIGHT).get_subtree_size()
+
+                if smaller_than_count > right_size:
+                    walk = walk.get_child(LEFT)
+                    smaller_than_count -= right_size + 1
+                elif smaller_than_count == right_size:
+                    break
+                else:
+                    walk = walk.get_child(RIGHT)
+            elif smaller_than_count > 0:
+                smaller_than_count -= 1
+                walk = walk.get_child(LEFT)
+            else:
+                break
+
+        return last.get_key(), last.get_value()

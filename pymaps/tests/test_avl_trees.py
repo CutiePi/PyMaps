@@ -32,7 +32,7 @@ class TestAvlTrees(unittest.TestCase):
         bt = AVLTree()
         control = dict()
 
-        for i in range(1000):
+        for i in range(10000):
             key = random.randint(0, 10000)
             value = random.randint(0, 8000)
 
