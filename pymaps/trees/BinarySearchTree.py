@@ -52,12 +52,23 @@ LEFT = True
 RIGHT = False
 
 
+# noinspection PyMethodMayBeStatic
 class BinarySearchTree:
     __slots__ = ["_item_count", "_root", "_min_node", "_max_node"]
 
     def __init__(self):
         self._item_count = 0
         self._root = None
+        self._min_node = None
+        self._max_node = None
+
+    def clear(self):
+        """
+        Empty the tree
+        :return: void
+        """
+        self._root = None
+        self._item_count = 0
         self._min_node = None
         self._max_node = None
 
@@ -70,6 +81,64 @@ class BinarySearchTree:
     def _deleted_hook(self, parent_node):
         pass
 
+    def _rotate(self, node):
+        """
+        Perform a rotate on the given node. It will automatically perform left rotate or right rotate,
+        depending where the node is.
+
+        Rotate:
+             Ancestor      Node
+            /          < - >   \
+           Node                 Ancestor
+
+        :param node: the node being rotated
+        :return: void
+        """
+        ancestor = node.get_parent()
+        if ancestor is None:
+            return
+
+        side = (node == ancestor.get_child(LEFT))
+
+        great_ancestor = ancestor.get_parent()  # maybe None
+        ancestor_side = (ancestor == great_ancestor.get_child()) if great_ancestor is not None else None
+
+        moved_child = node.get_child(not side)
+        self._attach(node, ancestor, not side)
+        self._attach(ancestor, moved_child, side)
+
+        if great_ancestor is None:
+            self._root = node
+            node.set_parent(None)
+        else:
+            self._attach(great_ancestor, node, ancestor_side)
+
+    def _trinode_restructure(self, node):
+        """
+        Restructure three nodes
+        :param node: the node to restructure
+        :return: the new root of the subtree made by the tri-node structure
+        """
+        ancestor = node.get_parent()
+
+        if ancestor is None:
+            return None  # TODO raise?
+
+        great_ancestor = ancestor.get_parent()
+
+        if great_ancestor is None:
+            return None  # TODO raise?
+
+        aligned = (node == ancestor.get_child()) == (ancestor == great_ancestor.get_child())
+
+        if aligned:
+            self._rotate(ancestor)
+            return ancestor
+        else:
+            self._rotate(node)
+            self._rotate(node)
+            return node
+
     def _search(self, key):
         last = None
         walk = self._root
@@ -80,8 +149,23 @@ class BinarySearchTree:
 
         return walk if walk is not None else last
 
-    def __getitem__(self, key):
-        return self._get(key)
+    def __getitem__(self, query):
+        if isinstance(query, slice):
+            start_node = self._search(query.start) if query.start is not None else self._min_node
+            stop_node = self._search(query.stop) if query.stop is not None else None
+            step = query.step
+            result = []
+
+            walk = start_node
+            while walk is not None and walk != stop_node:
+                result.append((walk.get_key(), walk.get_value()))
+                for i in range(1 if step is None else step):
+                    walk = self._inorder_successor(walk)
+
+            return result
+
+        else:
+            return self._get(query)
 
     def _get(self, key):
         node = self._search(key)
@@ -117,14 +201,10 @@ class BinarySearchTree:
             insertion_spot.set_value(value)
             self._accessed_hook(insertion_spot)
             node = None
-        elif insertion_spot.get_key() < key:
-            right_child = self._make_node(key, value, insertion_spot)
-            insertion_spot.set_child(right_child, RIGHT)
-            node = right_child
         else:
-            left_child = self._make_node(key, value, insertion_spot)
-            insertion_spot.set_child(left_child, LEFT)
-            node = left_child
+            child = self._make_node(key, value, insertion_spot)
+            insertion_spot.set_child(child, insertion_spot.get_key() > key)
+            node = child
 
         if node is not None:
             self._item_count += 1
@@ -144,7 +224,7 @@ class BinarySearchTree:
             return
 
         one_child = node.has_child(LEFT) != node.has_child(RIGHT)
-        no_child = node.has_child(LEFT) == node.has_child(RIGHT) == False
+        no_child = not node.has_child(LEFT) and not node.has_child(RIGHT)
 
         if one_child or no_child:
             self._single_child_delete(node)
@@ -296,4 +376,5 @@ class BinarySearchTree:
         :return: void
         """
         parent.set_child(new_child, side)
-        new_child.set_parent(parent)
+        if new_child is not None:
+            new_child.set_parent(parent)
