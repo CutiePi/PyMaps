@@ -447,7 +447,7 @@ class BinarySearchTree:
                 smaller_than_count += 1
                 if ancestor.get_child(RIGHT) is not None:
                     smaller_than_count += ancestor.get_child(RIGHT).get_subtree_size()
-                walk = ancestor
+            walk = ancestor
             ancestor = ancestor.get_parent()
 
         return self._item_count - (smaller_than_count + 1)
