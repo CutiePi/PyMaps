@@ -69,8 +69,8 @@ class TestAvlTrees(unittest.TestCase):
         for i in range(50):
             self.assertEqual(i, bt.at_index(i)[0])
 
-        # for i in range(50):
-        #     self.assertEqual(bt.index_of(i), i)
+        for i in range(50):
+            self.assertEqual(bt.index_of(i), i)
 
     def test_subtree_size_avl(self):
 
