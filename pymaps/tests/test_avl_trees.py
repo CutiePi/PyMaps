@@ -60,6 +60,27 @@ class TestAvlTrees(unittest.TestCase):
 
         self.assert_match(bt, control)
 
+    def test_index(self):
+        bt = AVLTree()
+
+        for i in range(50):
+            bt[i] = i
+
+        for i in range(50):
+            self.assertEqual(i, bt.at_index(i)[0])
+
+        # for i in range(50):
+        #     self.assertEqual(bt.index_of(i), i)
+
+    def test_subtree_size_avl(self):
+
+        bt = AVLTree()
+
+        for i in range(10):
+            bt[i] = i
+
+        self.assertEqual(bt._root.get_subtree_size(), 10)
+
     def assert_match(self, bt, control):
         for k in control:
             self.assertEqual(control[k], bt[k], "Control has a key that BST doesn't")

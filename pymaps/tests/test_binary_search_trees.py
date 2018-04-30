@@ -210,3 +210,32 @@ class TestBinarySearchTrees(unittest.TestCase):
 
         for i in range(50):
             self.assertEqual(bt.index_of(i), i)
+
+    def test_rotate_subtree_size(self):
+
+        bt = BinarySearchTree()
+        bt[5] = 5
+        bt[2] = 2
+        bt[3] = 3
+        bt[1] = 1
+
+        self.assertEqual(bt.at_index(0), (1, 1))
+        self.assertEqual(bt.at_index(1), (2, 2))
+        self.assertEqual(bt.at_index(2), (3, 3))
+        self.assertEqual(bt.at_index(3), (5, 5))
+
+        node_one = bt._search(1)
+        bt._rotate(node_one)
+
+        self.assertEqual(bt.at_index(0), (1, 1))
+        self.assertEqual(bt.at_index(1), (2, 2))
+        self.assertEqual(bt.at_index(2), (3, 3))
+        self.assertEqual(bt.at_index(3), (5, 5))
+
+        five_node = bt._search(5)
+        bt._rotate(five_node)
+
+        self.assertEqual(bt.at_index(0), (1, 1))
+        self.assertEqual(bt.at_index(1), (2, 2))
+        self.assertEqual(bt.at_index(2), (3, 3))
+        self.assertEqual(bt.at_index(3), (5, 5))

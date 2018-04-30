@@ -15,6 +15,11 @@ class TreeNode:
     def get_subtree_size(self):
         return self._subtree_size
 
+    def set_subtree_size(self, new_size):
+        old_size = self._subtree_size
+        self._subtree_size = new_size
+        return old_size
+
     def decrement_subtree_size(self):
         self._subtree_size -= 1
 
@@ -114,8 +119,15 @@ class BinarySearchTree:
         ancestor_side = (ancestor == great_ancestor.get_child()) if great_ancestor is not None else None
 
         moved_child = node.get_child(not side)
+
         self._attach(node, ancestor, not side)
+        ancestor.set_subtree_size(ancestor.get_subtree_size() - node.get_subtree_size())
+        node.set_subtree_size(ancestor.get_subtree_size() + node.get_subtree_size())
+
         self._attach(ancestor, moved_child, side)
+
+        if moved_child is not None:
+            ancestor.set_subtree_size(ancestor.get_subtree_size() + moved_child.get_subtree_size())
 
         if great_ancestor is None:
             self._root = node
@@ -415,6 +427,7 @@ class BinarySearchTree:
             new_child.set_parent(parent)
 
     def index_of(self, key):
+        # TODO Broken
         node = self._search(key)
 
         if node.get_key() != key:
