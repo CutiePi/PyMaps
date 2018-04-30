@@ -69,13 +69,20 @@ RIGHT = False
 
 # noinspection PyMethodMayBeStatic
 class BinarySearchTree:
-    __slots__ = ["_item_count", "_root", "_min_node", "_max_node"]
+    __slots__ = [
+        "_item_count",
+        "_root",
+        "_min_node",
+        "_max_node",
+        "_enable_index"
+    ]
 
-    def __init__(self):
+    def __init__(self, enable_index=True):
         self._item_count = 0
         self._root = None
         self._min_node = None
         self._max_node = None
+        self._enable_index = enable_index
 
     def clear(self):
         """
@@ -162,6 +169,14 @@ class BinarySearchTree:
             return node
 
     def _search(self, key):
+        """
+        Performs a binary search for a key in the tree.
+        It returns the node with the key or the node where the key should be inserted.
+        (The deepest node possible)
+        :performance: O(h)
+        :param key: the key to search for
+        :return: the node where the key is or would be a child of
+        """
         last = None
         walk = self._root
 
@@ -231,7 +246,7 @@ class BinarySearchTree:
         if node is not None:
             self._item_count += 1
 
-            if insertion_spot is not None:
+            if self._enable_index and insertion_spot is not None:
                 self._increment_subtree_size(insertion_spot.get_child(insertion_spot.get_key() > key))
 
             if self._min_node is None or key < self._min_node.get_key():
@@ -241,7 +256,13 @@ class BinarySearchTree:
             self._inserted_hook(node)
 
     def _increment_subtree_size(self, node):
-
+        """
+        Increment the subtree size for the whole path between a node and the root.
+        It is used to support fast indexing methods.
+        :performance: O(h)
+        :param node: the node to start from
+        :return: void
+        """
         if node is None:
             return
 
@@ -252,7 +273,12 @@ class BinarySearchTree:
             parent = parent.get_parent()
 
     def _decrement_subtree_size(self, node):
-
+        """
+        Decrement the subtree size for the whole path between a node and the root.
+        It is used to support fast indexing methods
+        :param node: the node to start from
+        :return: void
+        """
         parent = node.get_parent()
 
         while parent is not None:
@@ -296,7 +322,8 @@ class BinarySearchTree:
         side = LEFT if (ancestor is None or ancestor.get_child(LEFT) == node) else RIGHT
         child = node.get_child(LEFT) if node.has_child(LEFT) else node.get_child(RIGHT)
 
-        self._decrement_subtree_size(node)
+        if self._enable_index:
+            self._decrement_subtree_size(node)
 
         if node is self._min_node:
             self._min_node = child
@@ -426,12 +453,37 @@ class BinarySearchTree:
         if new_child is not None:
             new_child.set_parent(parent)
 
+    def index_of_or_raise(self, key):
+        """
+        See index_of.
+        Will raise an error instead of returning None
+        :param key:
+        :return:
+        """
+        index = self.index_of(key)
+        if index is None:
+            raise ValueError("The key is not in the tree")
+        else:
+            return index
+
     def index_of(self, key):
-        # TODO Broken
+        """
+        Return the index of the item with the key.
+        It will return the index if the list was a sorted list.
+        For instance, if you have a tree with the keys 0,1,2,3, their respective
+        indices would be 0,1,2,3. It also matches the inorder traversal index of the tree.
+        :performance: O(h)
+        :param key: the key to search for
+        :return: the index, or None if the key is not in the tree
+        """
+
+        if not self._enable_index:
+            raise RuntimeError("The binary search tree has been instantiated without support for index methods.")
+
         node = self._search(key)
 
         if node.get_key() != key:
-            return None  # TODO raise?
+            return None
 
         ancestor = node.get_parent()
 
@@ -452,13 +504,21 @@ class BinarySearchTree:
 
         return self._item_count - (smaller_than_count + 1)
 
-    def at_index(self, i):
+    def at_index(self, index):
+        """
+        Return the key at the specified index. The index is based of the index where the keys would be seen in an
+        inorder traversal of the tree
+        :param index: the index
+        :return: (tuple)(key, value)
+        """
+        if not self._enable_index:
+            raise RuntimeError("The binary search tree has been instantiated without support for index methods.")
 
-        if not -self._item_count <= i < self._item_count:
+        if not -self._item_count <= index < self._item_count:
             raise ValueError("Illegal index")
 
-        if i < 0:
-            i = self._item_count + i
+        if index < 0:
+            index = self._item_count + index
 
         walk = self._root
 
@@ -466,7 +526,7 @@ class BinarySearchTree:
             return None
 
         total = walk.get_subtree_size()
-        smaller_than_count = total - i - 1
+        smaller_than_count = total - index - 1
 
         last = walk
         while walk is not None:

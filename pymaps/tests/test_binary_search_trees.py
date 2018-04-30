@@ -239,3 +239,5 @@ class TestBinarySearchTrees(unittest.TestCase):
         self.assertEqual(bt.at_index(1), (2, 2))
         self.assertEqual(bt.at_index(2), (3, 3))
         self.assertEqual(bt.at_index(3), (5, 5))
+
+        self.assertEqual(bt._root.get_subtree_size(), 4)
