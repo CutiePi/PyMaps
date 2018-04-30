@@ -344,6 +344,10 @@ class BinarySearchTree:
         self._item_count -= 1
 
     def __iter__(self):
+        """
+        Yield all (key,value) pairs of the tree.
+        :return:
+        """
         for node in self._inorder_traversal(self._root):
             yield node.get_key(), node.get_value()
 
@@ -548,3 +552,35 @@ class BinarySearchTree:
                 break
 
         return last.get_key(), last.get_value()
+
+    def find_gt(self, key):
+        """
+        Find the smallest key greater than the one passed in parameters
+        :param key:
+        :return:
+        """
+        pass  # TODO
+
+    def find_gtw(self, key):
+        """
+        Find the smallest or equal key greater than the one passed in parameters
+        :param key:
+        :return:
+        """
+        pass  # TODO
+
+    def find_st(self, key):
+        """
+        Find the largest key smaller than the one passed in parameters
+        :param key:
+        :return:
+        """
+        pass  # TODO
+
+    def find_ste(self, key):
+        """
+        Find the largest key smaller than the one passed in parameters
+        :param key:
+        :return:
+        """
+        pass  # TODO
