@@ -197,6 +197,10 @@ class BinarySearchTree:
         stop_node = self._search(query.stop) if query.stop is not None else None
         step = query.step
 
+        if start_node is not None and stop_node is not None:
+            if start_node.get_key() > stop_node.get_key():
+                raise ValueError("Cannot search for a slice with a start greater than a stop")
+
         walk = start_node
 
         while walk is not None:
@@ -361,9 +365,11 @@ class BinarySearchTree:
 
     def _remove(self, key):
         node = self._search(key)
-
         if node is None or node.get_key() != key:
             return
+        self._remove_node(node)
+
+    def _remove_node(self, node):
 
         one_child = node.has_child(LEFT) != node.has_child(RIGHT)
         no_child = not node.has_child(LEFT) and not node.has_child(RIGHT)
@@ -397,10 +403,10 @@ class BinarySearchTree:
             self._decrement_subtree_size(node)
 
         if node is self._min_node:
-            self._min_node = child
+            self._min_node = child if child is not None else ancestor
 
         if node is self._max_node:
-            self._max_node = child
+            self._max_node = child if child is not None else ancestor
 
         if ancestor is None:
             self._root = child
@@ -579,13 +585,7 @@ class BinarySearchTree:
 
         return self._item_count - (smaller_than_count + 1)
 
-    def at_index(self, index):
-        """
-        Return the key at the specified index. The index is based of the index where the keys would be seen in an
-        inorder traversal of the tree
-        :param index: the index
-        :return: (tuple)(key, value)
-        """
+    def _at_index(self, index):
         if not self._enable_index:
             raise RuntimeError("The binary search tree has been instantiated without support for index methods.")
 
@@ -622,7 +622,17 @@ class BinarySearchTree:
             else:
                 break
 
-        return last.get_key(), last.get_value()
+        return last
+
+    def at_index(self, index):
+        """
+        Return the key at the specified index. The index is based of the index where the keys would be seen in an
+        inorder traversal of the tree
+        :param index: the index
+        :return: (tuple)(key, value)
+        """
+        node = self._at_index(index)
+        return node.get_key(), node.get_value()
 
     def count_in_range(self, start, stop, step=1, inclusive=False):
         """

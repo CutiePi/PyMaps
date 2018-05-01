@@ -90,3 +90,8 @@ class TestAvlTrees(unittest.TestCase):
             self.assertEqual(v, control[k], "BST as a key that control doesn't")
 
         self.assertEqual(len(bt), len(control))
+
+    # def test_bigger_restructures(self):
+    #     bt = AVLTree()
+    #     bt[5] = 5
+    #     self.assertEqual()
