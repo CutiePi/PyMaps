@@ -188,21 +188,81 @@ class BinarySearchTree:
 
     def __getitem__(self, query):
         if isinstance(query, slice):
-            start_node = self._search(query.start) if query.start is not None else self._min_node
-            stop_node = self._search(query.stop) if query.stop is not None else None
-            step = query.step
-            result = []
-
-            walk = start_node
-            while walk is not None and walk != stop_node:
-                result.append((walk.get_key(), walk.get_value()))
-                for i in range(1 if step is None else step):
-                    walk = self._inorder_successor(walk)
-
-            return result
-
+            return self._get_slice(query)
         else:
             return self._get(query)
+
+    def _gen_slice(self, query, inclusive=False):
+        start_node = self._search(query.start) if query.start is not None else self._min_node
+        stop_node = self._search(query.stop) if query.stop is not None else None
+        step = query.step
+
+        walk = start_node
+
+        while walk is not None:
+
+            if not inclusive and walk == stop_node:
+                break
+
+            yield walk
+
+            if walk == stop_node:
+                break
+
+            for i in range(1 if step is None else step):  # skip "step" many items
+                walk = self._inorder_successor(walk)
+
+    def _gen_islice(self, query, inclusive=False):
+        start_node = self._search(query.start) if query.start is not None else self._min_node
+        stop_node = self._search(query.stop) if query.stop is not None else None
+        step = query.step
+
+        walk = self._min_node
+
+        while walk is not None:
+            if not inclusive and walk == start_node:
+                break
+
+            yield walk
+
+            if walk == start_node:
+                break
+
+            for i in range(1 if step is None else step):  # skip "step" many items
+                walk = self._inorder_successor(walk)
+
+        # skip the area between start and stop
+        walk = stop_node
+
+        while walk is not None:
+
+            if not (not inclusive and walk == stop_node):
+                yield walk
+
+            for i in range(1 if step is None else step):  # skip "step" many items
+                walk = self._inorder_successor(walk)
+
+    def _get_slice(self, query, inclusive=False):
+        result = [(node.get_key(), node.get_value()) for node in self._gen_slice(query, inclusive)]
+        return result
+
+    def _get_islice(self, query, inclusive=False):
+        result = [(node.get_key(), node.get_value()) for node in self._gen_islice(query, inclusive)]
+        return result
+
+    def slice(self, start, stop, step=1, inclusive=False):
+        """
+        Return a slice of the tree
+        :param start: the start key (None for min_key)
+        :param stop: the stop key (None for until the end of the tree)
+        :param step: the number of keys skipped in between each result
+        :param inclusive: if the stop key is included or not
+        :return: an array of (key,value) tuples
+        """
+        return self._get_slice(slice(start, stop, step), inclusive=inclusive)
+
+    def islice(self, start, stop, step=1, inclusive=False):
+        return self._get_islice(slice(start, stop, step), inclusive=inclusive)
 
     def _get(self, key):
         node = self._search(key)
@@ -216,8 +276,11 @@ class BinarySearchTree:
         node = self._search(key)
         return node is not None and node.get_key() == key
 
-    def __setitem__(self, key, value):
-        self._insert(key, value)
+    def __setitem__(self, query, value):
+        if isinstance(query, slice):
+            self.set_slice(query, value)
+        else:
+            self._insert(query, value)
 
     def _insert(self, key, value):
         """
@@ -254,6 +317,14 @@ class BinarySearchTree:
             if self._max_node is None or key > self._max_node.get_key():
                 self._max_node = node
             self._inserted_hook(node)
+
+    def set_slice(self, slice_query, new_value, inclusive=False):
+        for node in self._gen_slice(slice_query, inclusive=inclusive):
+            node.set_value(new_value)
+
+    def set_islice(self, slice_query, new_value, inclusive=False):
+        for node in self._gen_islice(slice_query, inclusive=inclusive):
+            node.set_value(new_value)
 
     def _increment_subtree_size(self, node):
         """
@@ -553,21 +624,55 @@ class BinarySearchTree:
 
         return last.get_key(), last.get_value()
 
+    def count_in_range(self, start, stop, step=1, inclusive=False):
+        """
+        Return the number of elements contained in the specified interval.
+
+        :param step: the step between two distinct elements
+        :param start: the start of the range (inclusive), None for min_key
+        :param stop:  the stop of the range (inclusive if specified else exclusive), None for max_key
+        :param inclusive: if we include the stop or not
+        :return: the count
+        """
+        total = 0
+
+        for _, _ in self._get_slice(slice(start, stop, step), inclusive):
+            total += 1
+
+        return total
+
     def find_gt(self, key):
         """
         Find the smallest key greater than the one passed in parameters
         :param key:
         :return:
         """
-        pass  # TODO
+        walk = self._search(key)
 
-    def find_gtw(self, key):
+        while walk is not None and walk.get_key() <= key:
+            walk = self._inorder_successor(walk)
+
+        if walk is None:
+            return None
+
+        return walk.get_key(), walk.get_value()
+
+    def find_gte(self, key):
         """
         Find the smallest or equal key greater than the one passed in parameters
         :param key:
         :return:
         """
-        pass  # TODO
+
+        walk = self._search(key)
+
+        while walk is not None and walk.get_key() < key:
+            walk = self._inorder_successor(walk)
+
+        if walk is None:
+            return None
+
+        return walk.get_key(), walk.get_value()
 
     def find_st(self, key):
         """
@@ -575,7 +680,16 @@ class BinarySearchTree:
         :param key:
         :return:
         """
-        pass  # TODO
+
+        walk = self._search(key)
+
+        while walk is not None and walk.get_key() >= key:
+            walk = self._inorder_predecessor(walk)
+
+        if walk is None:
+            return None
+
+        return walk.get_key(), walk.get_value()
 
     def find_ste(self, key):
         """
@@ -583,4 +697,15 @@ class BinarySearchTree:
         :param key:
         :return:
         """
-        pass  # TODO
+        walk = self._search(key)
+
+        while walk is not None and walk.get_key() > key:
+            walk = self._inorder_predecessor(walk)
+
+        if walk is None:
+            return None
+
+        return walk.get_key(), walk.get_value()
+
+    def __setslice__(self, i, j, sequence):
+        raise RuntimeError("No clue what this is for since __setitem works for slices...")

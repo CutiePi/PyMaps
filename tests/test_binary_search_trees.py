@@ -1,8 +1,8 @@
 import random
 import unittest
 
-from pymaps.tests.test_utils import inorder_str, postorder_str
 from pymaps.trees.BinarySearchTree import BinarySearchTree
+from tests.test_utils import inorder_str, postorder_str
 
 
 class TestBinarySearchTrees(unittest.TestCase):
@@ -45,8 +45,25 @@ class TestBinarySearchTrees(unittest.TestCase):
         self.assertEqual([(1, 1), (2, 2)], bt[:3])
         self.assertEqual([(1, 1), (2, 2)], bt[1:3])
 
+        self.assertEqual(2, bt.count_in_range(1, 3))
+
         self.assertEqual([(1, 1), (2, 2), (3, 3), (4, 4)], bt[:])
         self.assertEqual([(1, 1), (2, 2), (3, 3), (4, 4)], bt[1:])
+
+    def test_islice(self):
+
+        bt = BinarySearchTree()
+        bt[1] = 1
+        bt[2] = 2
+        bt[3] = 3
+        bt[4] = 4
+
+        self.assertEqual(bt.islice(1, 2), [(3, 3), (4, 4)])
+        self.assertEqual(bt.islice(1, 2, inclusive=True), [(1, 1), (2, 2), (3, 3), (4, 4)])
+
+        bt[5] = 5
+
+        self.assertEqual(bt.islice(2, 3), [(1, 1), (4, 4), (5, 5)])
 
     def test_predecessor(self):
         bt = BinarySearchTree()
@@ -211,6 +228,24 @@ class TestBinarySearchTrees(unittest.TestCase):
         for i in range(50):
             self.assertEqual(bt.index_of(i), i)
 
+    def test_find(self):
+        bt = BinarySearchTree()
+
+        for i in range(50):
+            bt[i] = i
+
+        self.assertEqual(bt.find_gt(45), (46, 46))
+        self.assertEqual(bt.find_gte(45), (45, 45))
+        self.assertIsNone(bt.find_gt(49))
+
+        self.assertEqual(bt.find_gte(1), (1, 1))
+        self.assertEqual(bt.find_gte(49), (49, 49))
+
+        self.assertEqual(bt.find_gt(1), (2, 2))
+
+        self.assertIsNone(bt.find_st(0))
+        self.assertEqual(bt.find_ste(0), (0, 0))
+
     def test_rotate_subtree_size(self):
 
         bt = BinarySearchTree()
@@ -241,3 +276,10 @@ class TestBinarySearchTrees(unittest.TestCase):
         self.assertEqual(bt.at_index(3), (5, 5))
 
         self.assertEqual(bt._root.get_subtree_size(), 4)
+
+    def test_set_slice(self):
+        bt = BinarySearchTree()
+        for i in range(5):
+            bt[i + 1] = i + 1
+
+        bt[1:6] = 5

@@ -1,8 +1,9 @@
 import random
 import unittest
 
-from pymaps.tests.test_utils import preorder_str
-from pymaps.trees.AVLTree import AVLTree
+
+from pymaps import AVLTree
+from tests.test_utils import preorder_str
 
 
 class TestAvlTrees(unittest.TestCase):

@@ -40,8 +40,8 @@ class HeightAwareNode(TreeNode):
 
 class AVLTree(BinarySearchTree):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, enable_index=True):
+        super().__init__(enable_index=enable_index)
 
     def _inserted_hook(self, inserted_node):
         self._rebalance(inserted_node, True)
