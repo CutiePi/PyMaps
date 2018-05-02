@@ -1,3 +1,9 @@
+from pymaps.SortedContainer import SortedContainer
+from queue import Queue
+
+LEFT = True
+RIGHT = False
+
 class TreeNode:
     __slots__ = ["_key", "_value", "_parent_node", "_left_child", "_right_child", "_subtree_size"]
 
@@ -59,16 +65,15 @@ class TreeNode:
         self._parent_node = new_parent
         return old_parent
 
+    def is_leaf(self):
+        return not self.has_child(LEFT) and not self.has_child(RIGHT)
+
     def __repr__(self):
         return "[%s:%s]" % (self._key, self._value)
 
 
-LEFT = True
-RIGHT = False
-
-
 # noinspection PyMethodMayBeStatic
-class BinarySearchTree:
+class BinarySearchTree(SortedContainer):
     __slots__ = [
         "_item_count",
         "_root",
@@ -78,6 +83,7 @@ class BinarySearchTree:
     ]
 
     def __init__(self, enable_index=True):
+        super().__init__()
         self._item_count = 0
         self._root = None
         self._min_node = None
@@ -663,7 +669,7 @@ class BinarySearchTree:
             walk = self._inorder_successor(walk)
 
         if walk is None:
-            return None
+            return None, None
 
         return walk.get_key(), walk.get_value()
 
@@ -680,7 +686,7 @@ class BinarySearchTree:
             walk = self._inorder_successor(walk)
 
         if walk is None:
-            return None
+            return None, None
 
         return walk.get_key(), walk.get_value()
 
@@ -697,7 +703,7 @@ class BinarySearchTree:
             walk = self._inorder_predecessor(walk)
 
         if walk is None:
-            return None
+            return None, None
 
         return walk.get_key(), walk.get_value()
 
@@ -713,9 +719,23 @@ class BinarySearchTree:
             walk = self._inorder_predecessor(walk)
 
         if walk is None:
-            return None
+            return None, None
 
         return walk.get_key(), walk.get_value()
 
     def __setslice__(self, i, j, sequence):
         raise RuntimeError("No clue what this is for since __setitem works for slices...")
+
+    def _gen_bfs(self):
+        q = Queue()
+        q.put(self._root)
+
+        while q.qsize() > 0:
+            node = q.get()
+
+            yield node
+
+            if node.has_child(LEFT):
+                q.put(node.get_child(LEFT))
+            if node.has_child(RIGHT):
+                q.put(node.get_child(RIGHT))

@@ -1,12 +1,12 @@
 import unittest
 
-from pymaps import SortedList
+from pymaps import AVLSortedList
 
 
 class TestSortedList(unittest.TestCase):
 
     def test_basic_append(self):
-        sl = SortedList()
+        sl = AVLSortedList()
 
         sl.append(5)
         sl.append(6)
@@ -23,7 +23,7 @@ class TestSortedList(unittest.TestCase):
         self.assertEqual(len(sl), 3)
 
     def test_slice(self):
-        sl = SortedList()
+        sl = AVLSortedList()
 
         sl.append(5)
         sl.append(4)
@@ -35,3 +35,10 @@ class TestSortedList(unittest.TestCase):
         self.assertEqual(sl[0:], [1, 4, 5, 10])
 
         self.assertEqual(sl[-3:-1], [4, 5])
+
+    def test_multiple_same_values(self):
+        sl = AVLSortedList()
+        sl.append(1)
+        sl.append(1)
+
+        self.assertEqual([x for x in sl], [1, 1])

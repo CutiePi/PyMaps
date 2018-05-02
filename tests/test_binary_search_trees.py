@@ -236,14 +236,14 @@ class TestBinarySearchTrees(unittest.TestCase):
 
         self.assertEqual(bt.find_gt(45), (46, 46))
         self.assertEqual(bt.find_gte(45), (45, 45))
-        self.assertIsNone(bt.find_gt(49))
+        self.assertIsNone(bt.find_gt(49)[0])
 
         self.assertEqual(bt.find_gte(1), (1, 1))
         self.assertEqual(bt.find_gte(49), (49, 49))
 
         self.assertEqual(bt.find_gt(1), (2, 2))
 
-        self.assertIsNone(bt.find_st(0))
+        self.assertIsNone(bt.find_st(0)[0])
         self.assertEqual(bt.find_ste(0), (0, 0))
 
     def test_rotate_subtree_size(self):
