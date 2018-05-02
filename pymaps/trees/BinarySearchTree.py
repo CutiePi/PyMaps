@@ -1,8 +1,9 @@
 from pymaps.SortedContainer import SortedContainer
 from queue import Queue
 
-LEFT = True
-RIGHT = False
+LEFT_CHILD = True
+RIGHT_CHILD = False
+
 
 class TreeNode:
     __slots__ = ["_key", "_value", "_parent_node", "_left_child", "_right_child", "_subtree_size"]
@@ -29,14 +30,14 @@ class TreeNode:
     def decrement_subtree_size(self):
         self._subtree_size -= 1
 
-    def has_child(self, left=True):
-        return (self._left_child is not None) if left else (self._right_child is not None)
+    def has_child(self, child=LEFT_CHILD):
+        return (self._left_child is not None) if (child == LEFT_CHILD) else (self._right_child is not None)
 
-    def get_child(self, left=True):
-        return self._left_child if left else self._right_child
+    def get_child(self, child=LEFT_CHILD):
+        return self._left_child if (child == LEFT_CHILD) else self._right_child
 
-    def set_child(self, child, left=True):
-        if left:
+    def set_child(self, child, child_to_set=LEFT_CHILD):
+        if child_to_set:
             self._left_child = child
         else:
             self._right_child = child
@@ -66,7 +67,7 @@ class TreeNode:
         return old_parent
 
     def is_leaf(self):
-        return not self.has_child(LEFT) and not self.has_child(RIGHT)
+        return not self.has_child(LEFT_CHILD) and not self.has_child(RIGHT_CHILD)
 
     def __repr__(self):
         return "[%s:%s]" % (self._key, self._value)
@@ -75,7 +76,7 @@ class TreeNode:
 # noinspection PyMethodMayBeStatic
 class BinarySearchTree(SortedContainer):
     __slots__ = [
-        "_item_count",
+        "_node_count",
         "_root",
         "_min_node",
         "_max_node",
@@ -84,7 +85,7 @@ class BinarySearchTree(SortedContainer):
 
     def __init__(self, enable_index=True):
         super().__init__()
-        self._item_count = 0
+        self._node_count = 0
         self._root = None
         self._min_node = None
         self._max_node = None
@@ -96,7 +97,7 @@ class BinarySearchTree(SortedContainer):
         :return: void
         """
         self._root = None
-        self._item_count = 0
+        self._node_count = 0
         self._min_node = None
         self._max_node = None
 
@@ -126,7 +127,7 @@ class BinarySearchTree(SortedContainer):
         if ancestor is None:
             return
 
-        side = (node == ancestor.get_child(LEFT))
+        side = (node == ancestor.get_child(LEFT_CHILD))
 
         great_ancestor = ancestor.get_parent()  # maybe None
         ancestor_side = (ancestor == great_ancestor.get_child()) if great_ancestor is not None else None
@@ -317,7 +318,7 @@ class BinarySearchTree(SortedContainer):
             node = child
 
         if node is not None:
-            self._item_count += 1
+            self._node_count += 1
 
             if self._enable_index and insertion_spot is not None:
                 self._increment_subtree_size(insertion_spot.get_child(insertion_spot.get_key() > key))
@@ -377,8 +378,8 @@ class BinarySearchTree(SortedContainer):
 
     def _remove_node(self, node):
 
-        one_child = node.has_child(LEFT) != node.has_child(RIGHT)
-        no_child = not node.has_child(LEFT) and not node.has_child(RIGHT)
+        one_child = node.has_child(LEFT_CHILD) != node.has_child(RIGHT_CHILD)
+        no_child = not node.has_child(LEFT_CHILD) and not node.has_child(RIGHT_CHILD)
 
         if one_child or no_child:
             self._single_child_delete(node)
@@ -402,8 +403,8 @@ class BinarySearchTree(SortedContainer):
     def _single_child_delete(self, node):
 
         ancestor = node.get_parent()
-        side = LEFT if (ancestor is None or ancestor.get_child(LEFT) == node) else RIGHT
-        child = node.get_child(LEFT) if node.has_child(LEFT) else node.get_child(RIGHT)
+        side = LEFT_CHILD if (ancestor is None or ancestor.get_child(LEFT_CHILD) == node) else RIGHT_CHILD
+        child = node.get_child(LEFT_CHILD) if node.has_child(LEFT_CHILD) else node.get_child(RIGHT_CHILD)
 
         if self._enable_index:
             self._decrement_subtree_size(node)
@@ -424,7 +425,7 @@ class BinarySearchTree(SortedContainer):
             ancestor.set_child(None, side)
 
         node.set_parent(None)
-        self._item_count -= 1
+        self._node_count -= 1
 
     def __iter__(self):
         """
@@ -439,9 +440,9 @@ class BinarySearchTree(SortedContainer):
         if node is None:
             return
 
-        yield from self._inorder_traversal(node.get_child(LEFT))
+        yield from self._inorder_traversal(node.get_child(LEFT_CHILD))
         yield node
-        yield from self._inorder_traversal(node.get_child(RIGHT))
+        yield from self._inorder_traversal(node.get_child(RIGHT_CHILD))
 
     def _preorder_traversal(self, node):
 
@@ -449,16 +450,16 @@ class BinarySearchTree(SortedContainer):
             return
 
         yield node
-        yield from self._preorder_traversal(node.get_child(LEFT))
-        yield from self._preorder_traversal(node.get_child(RIGHT))
+        yield from self._preorder_traversal(node.get_child(LEFT_CHILD))
+        yield from self._preorder_traversal(node.get_child(RIGHT_CHILD))
 
     def _postorder_traversal(self, node):
 
         if node is None:
             return
 
-        yield from self._postorder_traversal(node.get_child(LEFT))
-        yield from self._postorder_traversal(node.get_child(RIGHT))
+        yield from self._postorder_traversal(node.get_child(LEFT_CHILD))
+        yield from self._postorder_traversal(node.get_child(RIGHT_CHILD))
         yield node
 
     # noinspection PyMethodMayBeStatic
@@ -469,10 +470,10 @@ class BinarySearchTree(SortedContainer):
         :param node: the node from where we start
         :return: the predecessor
         """
-        if node.has_child(left=True):
+        if node.has_child(child=True):
             walk = node.get_child()
-            while walk.has_child(RIGHT):
-                walk = walk.get_child(RIGHT)
+            while walk.has_child(RIGHT_CHILD):
+                walk = walk.get_child(RIGHT_CHILD)
             return walk
         else:
             walk = node.get_parent()
@@ -482,10 +483,10 @@ class BinarySearchTree(SortedContainer):
 
     def _inorder_successor(self, node):
 
-        if node.has_child(RIGHT):
-            walk = node.get_child(RIGHT)
-            while walk.has_child(LEFT):
-                walk = walk.get_child(LEFT)
+        if node.has_child(RIGHT_CHILD):
+            walk = node.get_child(RIGHT_CHILD)
+            while walk.has_child(LEFT_CHILD):
+                walk = walk.get_child(LEFT_CHILD)
             return walk
         else:
             walk = node.get_parent()
@@ -494,7 +495,7 @@ class BinarySearchTree(SortedContainer):
             return walk
 
     def __len__(self):
-        return self._item_count
+        return self._node_count
 
     def _make_node(self, key, value, parent):
         """
@@ -512,7 +513,7 @@ class BinarySearchTree(SortedContainer):
         :performance O(1)
         :return: tuple (key, value)
         """
-        if self._item_count == 0:
+        if self._node_count == 0:
             raise ValueError("Empty Binary Search tree")
         else:
             return self._max_node.get_key(), self._max_node.get_value()
@@ -523,12 +524,12 @@ class BinarySearchTree(SortedContainer):
         :performance O(1)
         :return: tuple (key, value)
         """
-        if self._item_count == 0:
+        if self._node_count == 0:
             raise ValueError("Empty Binary Search tree")
         else:
             return self._min_node.get_key(), self._min_node.get_value()
 
-    def _attach(self, parent, new_child, side=LEFT):
+    def _attach(self, parent, new_child, side=LEFT_CHILD):
         """
         Attach and node to a parent node, and perform the two way bindings
         :param parent: the parent node
@@ -576,30 +577,33 @@ class BinarySearchTree(SortedContainer):
 
         smaller_than_count = 0
 
-        if node.has_child(RIGHT):
-            smaller_than_count += node.get_child(RIGHT).get_subtree_size()
+        if node.has_child(RIGHT_CHILD):
+            smaller_than_count += node.get_child(RIGHT_CHILD).get_subtree_size()
 
         walk = node
 
         while ancestor is not None:
-            if walk == ancestor.get_child(LEFT):
+            if walk == ancestor.get_child(LEFT_CHILD):
                 smaller_than_count += 1
-                if ancestor.get_child(RIGHT) is not None:
-                    smaller_than_count += ancestor.get_child(RIGHT).get_subtree_size()
+                if ancestor.get_child(RIGHT_CHILD) is not None:
+                    smaller_than_count += ancestor.get_child(RIGHT_CHILD).get_subtree_size()
             walk = ancestor
             ancestor = ancestor.get_parent()
 
-        return self._item_count - (smaller_than_count + 1)
+        return len(self) - (smaller_than_count + 1)
+
+    def _is_valid_index(self, index):
+        return -self._node_count <= index < self._node_count
 
     def _at_index(self, index):
         if not self._enable_index:
             raise RuntimeError("The binary search tree has been instantiated without support for index methods.")
 
-        if not -self._item_count <= index < self._item_count:
+        if not self._is_valid_index(index):
             raise ValueError("Illegal index")
 
         if index < 0:
-            index = self._item_count + index
+            index = self._node_count + index
 
         walk = self._root
 
@@ -612,19 +616,19 @@ class BinarySearchTree(SortedContainer):
         last = walk
         while walk is not None:
             last = walk
-            if walk.has_child(RIGHT):
-                right_size = walk.get_child(RIGHT).get_subtree_size()
+            if walk.has_child(RIGHT_CHILD):
+                right_size = walk.get_child(RIGHT_CHILD).get_subtree_size()
 
                 if smaller_than_count > right_size:
-                    walk = walk.get_child(LEFT)
+                    walk = walk.get_child(LEFT_CHILD)
                     smaller_than_count -= right_size + 1
                 elif smaller_than_count == right_size:
                     break
                 else:
-                    walk = walk.get_child(RIGHT)
+                    walk = walk.get_child(RIGHT_CHILD)
             elif smaller_than_count > 0:
                 smaller_than_count -= 1
-                walk = walk.get_child(LEFT)
+                walk = walk.get_child(LEFT_CHILD)
             else:
                 break
 
@@ -735,7 +739,13 @@ class BinarySearchTree(SortedContainer):
 
             yield node
 
-            if node.has_child(LEFT):
-                q.put(node.get_child(LEFT))
-            if node.has_child(RIGHT):
-                q.put(node.get_child(RIGHT))
+            if node.has_child(LEFT_CHILD):
+                q.put(node.get_child(LEFT_CHILD))
+            if node.has_child(RIGHT_CHILD):
+                q.put(node.get_child(RIGHT_CHILD))
+
+    def _height(self, node):
+        return 1 + max(self.height(), node.get_child(RIGHT_CHILD))
+
+    def height(self):
+        return self._height(self._root)

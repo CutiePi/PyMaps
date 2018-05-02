@@ -1,4 +1,4 @@
-from pymaps.trees.BinarySearchTree import TreeNode, LEFT, RIGHT, BinarySearchTree
+from pymaps.trees.BinarySearchTree import TreeNode, LEFT_CHILD, RIGHT_CHILD, BinarySearchTree
 
 
 class HeightAwareNode(TreeNode):
@@ -17,11 +17,11 @@ class HeightAwareNode(TreeNode):
         return old_height
 
     def get_left_height(self):
-        left_height = 0 if not self.has_child(LEFT) else self.get_child(LEFT).get_height()
+        left_height = 0 if not self.has_child(LEFT_CHILD) else self.get_child(LEFT_CHILD).get_height()
         return left_height
 
     def get_right_height(self):
-        right_height = 0 if not self.has_child(RIGHT) else self.get_child(RIGHT).get_height()
+        right_height = 0 if not self.has_child(RIGHT_CHILD) else self.get_child(RIGHT_CHILD).get_height()
         return right_height
 
     def is_balanced(self):
@@ -65,8 +65,8 @@ class AVLTree(BinarySearchTree):
 
                 root = self._trinode_restructure(tall_grandchild)
 
-                left = root.get_child(LEFT)
-                right = root.get_child(RIGHT)
+                left = root.get_child(LEFT_CHILD)
+                right = root.get_child(RIGHT_CHILD)
 
                 if left is not None:
                     left.recompute_height()

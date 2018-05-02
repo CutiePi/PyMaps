@@ -1,7 +1,6 @@
 import random
 import unittest
 
-
 from pymaps import AVLTree
 from tests.test_utils import preorder_str
 
