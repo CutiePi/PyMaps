@@ -513,7 +513,7 @@ class BinarySearchTree(SortedContainer):
         :performance O(1)
         :return: tuple (key, value)
         """
-        if self._node_count == 0:
+        if len(self) == 0:
             raise ValueError("Empty Binary Search tree")
         else:
             return self._max_node.get_key(), self._max_node.get_value()
@@ -524,7 +524,7 @@ class BinarySearchTree(SortedContainer):
         :performance O(1)
         :return: tuple (key, value)
         """
-        if self._node_count == 0:
+        if len(self) == 0:
             raise ValueError("Empty Binary Search tree")
         else:
             return self._min_node.get_key(), self._min_node.get_value()
@@ -593,7 +593,7 @@ class BinarySearchTree(SortedContainer):
         return len(self) - (smaller_than_count + 1)
 
     def _is_valid_index(self, index):
-        return -self._node_count <= index < self._node_count
+        return -len(self) <= index < len(self)
 
     def _at_index(self, index):
         if not self._enable_index:
@@ -603,7 +603,7 @@ class BinarySearchTree(SortedContainer):
             raise ValueError("Illegal index")
 
         if index < 0:
-            index = self._node_count + index
+            index = len(self) + index
 
         walk = self._root
 

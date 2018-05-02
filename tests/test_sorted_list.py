@@ -51,3 +51,42 @@ class TestSortedList(unittest.TestCase):
         self.assertEqual(sl.find_ste(1), 1)
         self.assertEqual(sl.find_gt(6), None)
         self.assertEqual(sl.find_gte(6), 6)
+
+        self.assertEqual(sl[0], 1)
+        self.assertEqual(sl[1], 1)
+        self.assertEqual(sl[2], 2)
+        self.assertEqual(sl[3], 3)
+
+    def test_slice(self):
+        sl = AVLSortedList()
+
+        array = [1, 1, 2, 2, 3]
+
+        for e in array:
+            sl.append(e)
+
+        self.assertEqual(sl[:], array)
+        self.assertEqual(sl[::2], array[::2])
+
+        sl.clear()
+
+        array = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 12]
+
+        for e in array:
+            sl.append(e)
+
+        self.assertEqual(sl[:], array)
+        self.assertEqual(sl[::2], array[::2])
+
+        sl.clear()
+
+        array = [1, 3, 2, 2, 3, 1, 5, 4, 14, 5, 6, 6, 12]
+        array.sort()
+
+        for e in array:
+            sl.append(e)
+
+        self.assertEqual(sl[:], array)
+        self.assertEqual(sl[::2], array[::2])
+        self.assertEqual(sl[1:9:2], array[1:9:2])
+        self.assertEqual(sl[-2:-1], array[-2:-1])

@@ -17,9 +17,6 @@ class SortedListNode(HeightAwareNode):
     def get_count(self):
         return self._value
 
-    def get_subtree_size(self):
-        return self._subtree_size + (self._value - 1)
-
 
 class AVLSortedList(SortedList, AVLTree):
     __slots__ = ["_node_count"]
@@ -33,7 +30,7 @@ class AVLSortedList(SortedList, AVLTree):
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            pass  # TODO get slice
+            return self._get_slice(item)
         else:
             return self.at_index(item)
 
@@ -63,6 +60,7 @@ class AVLSortedList(SortedList, AVLTree):
 
         if current_node is not None and current_node.get_key() == element:
             current_node.set_value(current_node.get_value() + 1)
+            current_node.increment_subtree_size()
             super(AVLTree, self)._increment_subtree_size(current_node)
         else:
             super(AVLTree, self)._insert(element, 1)
@@ -77,6 +75,7 @@ class AVLSortedList(SortedList, AVLTree):
             if self._max_node.get_count() < 1:
                 self._remove_node(self._max_node)
             self._item_count -= 1
+            self._max_node.decrement_subtree_size()
         else:
             raise ValueError("The tree is currently empty")
 
@@ -114,9 +113,6 @@ class AVLSortedList(SortedList, AVLTree):
     def at_index(self, index):
         return super(AVLTree, self).at_index(index)[0]
 
-    def _is_valid_index(self, index):
-        return -self._item_count <= index < self._item_count
-
     def index_of(self, key):
         """
         Return the index of the item with the key.
@@ -153,4 +149,32 @@ class AVLSortedList(SortedList, AVLTree):
             walk = ancestor
             ancestor = ancestor.get_parent()
 
-        return len(self) - (smaller_than_count + (node.get_count()))
+        return (len(self) - smaller_than_count) - node.get_count()
+
+    def _get_slice(self, query, inclusive=False):
+        result = [x.get_element() for x in self._gen_slice(query, inclusive)]
+        return result
+
+    def _gen_slice(self, query, inclusive=False):
+
+        start = query.start if query.start is not None else 0
+        stop = query.stop if query.stop is not None else (len(self) + 1)
+        step = query.step if query.step is not None else 1
+
+        walk = self._at_index(start)
+        current_idx = start
+
+        first_index_of_key = self.index_of(walk.get_element())
+
+        step_walker = (start - first_index_of_key) % step
+
+        while walk is not None and current_idx < stop + (1 if inclusive else 0):
+            for _ in range(walk.get_count()):
+                if step_walker == 0:
+                    yield walk
+
+                step_walker = (step_walker - 1) % step
+
+                current_idx += 1
+
+            walk = self._inorder_successor(walk)
