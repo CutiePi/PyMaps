@@ -57,6 +57,18 @@ class TestSortedList(unittest.TestCase):
         self.assertEqual(sl[2], 2)
         self.assertEqual(sl[3], 3)
 
+    def test_index(self):
+
+        sl = AVLSortedList()
+
+        for i in range(50):
+            sl.append(i)
+
+        for i in range(50):
+            self.assertEqual(sl[i], i)
+
+        self.assertEqual([x for x in sl], [x for x in range(50)])
+
     def test_slice(self):
         sl = AVLSortedList()
 
